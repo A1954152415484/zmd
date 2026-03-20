@@ -1,0 +1,32 @@
+name: Update GKD Rules
+
+# 触发条件
+on:
+  schedule:
+    - cron: '0 16 * * *' # 每天北京时间 0:00 自动运行 (UTC 16:00)
+  workflow_dispatch:      # 允许你点击按钮手动立即运行
+
+jobs:
+  sync_task:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库代码
+        uses: actions/checkout@v3
+
+      - name: 获取并修改文件
+        run: |
+          # 1. 下载原始文件，保存为 lyj_gkd.json5
+          curl -L -o lyj_gkd.json5 https://raw.githubusercontent.com/ganlinte/GKD-subscription/main/dist/ganlin_gkd.json5
+          
+          # 2. 替换文字：将“甘霖的GKD订阅”替换为“LYJ的订阅”
+          # -i 表示直接修改文件，s 表示替换，g 表示全局替换
+          sed -i 's/甘霖的GKD订阅/LYJ的订阅/g' lyj_gkd.json5
+
+      - name: 提交并推送到我的仓库
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          git add lyj_gkd.json5
+          # 只有在文件有变动时才提交，防止报错
+          git commit -m "自动更新：已替换文字内容" || exit 0
+          git push
